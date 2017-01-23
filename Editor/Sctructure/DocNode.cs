@@ -25,6 +25,8 @@ namespace UnityMdDocGenerator {
 			var typeStr = FullName.Substring(0, 1);
 			switch( typeStr ) {
 				case "T": return DocNodeType.Type;
+				case "M": return DocNodeType.Method;
+				case "F": return DocNodeType.Field;
 				default: return DocNodeType.Unknown;
 			}
 		}
