@@ -27,6 +27,7 @@ namespace UnityMdDocGenerator {
 				case "T": return DocNodeType.Type;
 				case "M": return DocNodeType.Method;
 				case "F": return DocNodeType.Field;
+				case "P": return DocNodeType.Property;
 				default: return DocNodeType.Unknown;
 			}
 		}

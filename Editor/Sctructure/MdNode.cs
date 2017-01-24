@@ -7,6 +7,8 @@ namespace UnityMdDocGenerator {
 		public DocNode      Content { get; private set; }
 		public List<MdNode> Childs  { get; private set; }
 
+		public MdNodeType Type { get; set; }
+
 		public MdNode(string name, DocNode content) {
 			Name    = name;
 			Content = content;
