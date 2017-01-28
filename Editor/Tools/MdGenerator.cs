@@ -2,13 +2,11 @@
 	public class MdGenerator {
 
 		XmlDocReader _reader = null;
-		MdWriter  _writer = null;
-		LoggerBase _logger = null;
+		MdWriter     _writer = null;
 
-		public MdGenerator(XmlDocReader reader, MdWriter writer, LoggerBase logger) {
+		public MdGenerator(XmlDocReader reader, MdWriter writer) {
 			_reader = reader;
 			_writer = writer;
-			_logger = logger;
 		}
 
 		public void Create() {

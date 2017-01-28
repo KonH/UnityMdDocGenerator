@@ -3,6 +3,7 @@
 		Namespace,
 		NamespaceItem,
 		MemberGroup,
-		Member
+		Member,
+		Method
 	}
 }

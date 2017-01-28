@@ -13,7 +13,7 @@ namespace UnityMdDocGenerator {
 			var logger = new UnityLogger();
 			var reader = new XmlDocReader(Input, logger);
 			var writer = new MdWriter(Output, logger);
-			var generator = new MdGenerator(reader, writer, logger);
+			var generator = new MdGenerator(reader, writer);
 			generator.Create();
 			AssetDatabase.Refresh();
 		}

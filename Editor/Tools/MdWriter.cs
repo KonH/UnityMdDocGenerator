@@ -3,10 +3,15 @@ using System.Collections.Generic;
 
 namespace UnityMdDocGenerator {
 	public class MdWriter {
-		string _namespaceFormat = "# {0}";
-		string _itemFormat = "## {0}";
-		string _groupFormat = "*{0}*";
-		string _memberFormat = "**{0}**";
+
+		const string FieldsNodeName        = "Fields\nField | About\n--- | ---";
+		const string PropertiesNodeName    = "Properties\nProperty | About\n--- | ---";
+		const string MethodsNodeName       = "Methods";
+		const string NamespaceHeaderFormat = "# {0}";
+		const string ItemHeaderFormat      = "## {0}";
+		const string GroupHeaderFormat     = "### {0}";
+		const string MemberFormat          = "**{0}** | {1}";
+		const string MethodFormat          = "**{0}** - {1}";
 		string     _outputRoot = null;
 		LoggerBase _logger     = null;
 
@@ -54,9 +59,9 @@ namespace UnityMdDocGenerator {
 
 		string GetTypeNode(DocNode node) {
 			switch( node.Type ) {
-				case DocNodeType.Method: return "Methods:";
-				case DocNodeType.Property: return "Properties:";
-				case DocNodeType.Field: return "Fields:";
+				case DocNodeType.Method  : return MethodsNodeName;
+				case DocNodeType.Property: return PropertiesNodeName;
+				case DocNodeType.Field   : return FieldsNodeName;
 				default: return null;
 			}
 		}
@@ -90,12 +95,10 @@ namespace UnityMdDocGenerator {
 		}
 
 		void ArrangeNodes(List<MdNode> nodes) {
-			// Fields
-			// Properties
-			// Methods
-			var methodsNode = FindNode(nodes, "Methods:");
-			var propertiesNode = FindNode(nodes, "Properties:");
-			var fieldsNode = FindNode(nodes, "Fields:");
+			// Fields, Properties, Methods
+			var methodsNode    = FindNode(nodes, MethodsNodeName);
+			var propertiesNode = FindNode(nodes, PropertiesNodeName);
+			var fieldsNode     = FindNode(nodes, FieldsNodeName);
 			TrySetFirstNode(nodes, methodsNode);
 			TrySetFirstNode(nodes, propertiesNode);
 			TrySetFirstNode(nodes, fieldsNode);
@@ -129,20 +132,61 @@ namespace UnityMdDocGenerator {
 
 		void SetupOutput(MdNode node, List<string> output, int intend = 0) {
 			var outputHeader = OutputHeader(node);
-			output.Add(outputHeader);
-			output.Add("");
-			if( node.Content != null ) {
-				output.Add(node.Content.Element.ToString());
+			var content      = ExtractContent(node.Content);
+			if( (node.Type == MdNodeType.Member || node.Type == MdNodeType.Method) && (content != null) ) {
+				if(node.Type == MdNodeType.Method) {
+					output.Add(string.Format(MethodFormat, outputHeader, content));
+					output.Add("");
+				} else {
+					output.Add(string.Format(MemberFormat, outputHeader, content));
+				}
+			} else {
+				output.Add(outputHeader);
+				if( content != null ) {
+					output.Add("");
+					output.Add(content);
+				}
 			}
-			output.Add("");
+		}
+
+		string ExtractContent(DocNode node) {
+			if( node != null ) {
+				// Temp
+				var rawText = node.Element.ToString();
+				var outputText = "";
+				bool skip = false;
+				bool onLine = false;
+				for( int i = 0; i < rawText.Length; i++ ) {
+					var c = rawText[i];
+					if( c == '\n' ) {
+						onLine = false;
+						continue;
+					} else if( char.IsWhiteSpace(c) && !onLine ) {
+						continue;
+					} else {
+						onLine = true;
+					}
+					if( c == '<' ) {
+						skip = true;
+					}
+					if( c == '>' && skip ) {
+						skip = false;
+						continue;
+					}
+					if( !skip ) {
+						outputText += c;
+					}
+				}
+				return outputText;
+			}
+			return null;
 		}
 
 		string FindFormat(MdNodeType type) {
 			switch( type) {
-				case MdNodeType.Member: return _memberFormat;
-				case MdNodeType.MemberGroup: return _groupFormat;
-				case MdNodeType.Namespace: return _namespaceFormat;
-				case MdNodeType.NamespaceItem: return _itemFormat;
+				case MdNodeType.MemberGroup  : return GroupHeaderFormat;
+				case MdNodeType.Namespace    : return NamespaceHeaderFormat;
+				case MdNodeType.NamespaceItem: return ItemHeaderFormat;
 				default: return null;
 			}
 		}
@@ -160,6 +204,9 @@ namespace UnityMdDocGenerator {
 			if( IsMemberGroup(node) ) {
 				return MdNodeType.MemberGroup;
 			}
+			if( IsMethod(node) ) {
+				return MdNodeType.Method;
+			}
 			if( IsMember(node) ) {
 				return MdNodeType.Member;
 			}
@@ -170,7 +217,10 @@ namespace UnityMdDocGenerator {
 		}
 
 		bool IsMemberGroup(MdNode node) {
-			return (node.Name == "Methods:") || (node.Name == "Properties:") || (node.Name == "Fields:");
+			return 
+				(node.Name == MethodsNodeName) || 
+				(node.Name == PropertiesNodeName) || 
+				(node.Name == FieldsNodeName);
 		}
 
 		bool HasAnyMemberGroups(MdNode node) {
@@ -184,6 +234,10 @@ namespace UnityMdDocGenerator {
 
 		bool IsMember(MdNode node) {
 			return (node.Content != null) && (node.Content.Type != DocNodeType.Type);
+		}
+
+		bool IsMethod(MdNode node) {
+			return (node.Content != null) && (node.Content.Type == DocNodeType.Method);
 		}
 	}
 }
